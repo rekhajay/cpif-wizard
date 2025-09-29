@@ -26,7 +26,14 @@ jobs:
       run: npm ci
         
     - name: Build
-      run: npm run build
+      run: |
+        echo "Environment variables during build:"
+        echo "REACT_APP_COSMOS_ENDPOINT: $REACT_APP_COSMOS_ENDPOINT"
+        echo "REACT_APP_COSMOS_KEY: ${REACT_APP_COSMOS_KEY:0:20}..."
+        npm run build
+      env:
+        REACT_APP_COSMOS_ENDPOINT: ${{ secrets.REACT_APP_COSMOS_ENDPOINT }}
+        REACT_APP_COSMOS_KEY: ${{ secrets.REACT_APP_COSMOS_KEY }}
         
     - name: Deploy to Azure Static Web Apps
       uses: Azure/static-web-apps-deploy@v1

@@ -7,22 +7,13 @@ export class CosmosService {
   private container: Container;
 
   constructor() {
-    const endpoint = process.env.REACT_APP_COSMOS_ENDPOINT;
-    const key = process.env.REACT_APP_COSMOS_KEY;
+    const endpoint = process.env.REACT_APP_COSMOS_ENDPOINT || 'https://cosmos-cpif-wizard.documents.azure.com:443/';
+    const key = process.env.REACT_APP_COSMOS_KEY || 'IeF@buuZlg3fpADlKf3IFgGkmlBMAzJfcb5ZbeQv1gr619ED13SDtyYFCzdvFqqNE9FAFOWRCWDgACDb9hTN4g==';
     
     console.log('Cosmos DB Environment Variables:', {
       endpoint: endpoint ? 'Set' : 'Not set',
       key: key ? 'Set' : 'Not set'
     });
-    
-    // For now, let's use mock data if environment variables aren't set
-    if (!endpoint || !key) {
-      console.warn('Cosmos DB environment variables not set - using mock mode');
-      this.cosmosClient = null as any;
-      this.database = null as any;
-      this.container = null as any;
-      return;
-    }
     
     this.cosmosClient = new CosmosClient({
       endpoint: endpoint,
