@@ -30,6 +30,9 @@ jobs:
         echo "Environment variables during build:"
         echo "REACT_APP_COSMOS_ENDPOINT: $REACT_APP_COSMOS_ENDPOINT"
         echo "REACT_APP_COSMOS_KEY: ${REACT_APP_COSMOS_KEY:0:20}..."
+        echo "Checking if secrets exist:"
+        echo "Secret REACT_APP_COSMOS_ENDPOINT exists: ${{ secrets.REACT_APP_COSMOS_ENDPOINT != '' }}"
+        echo "Secret REACT_APP_COSMOS_KEY exists: ${{ secrets.REACT_APP_COSMOS_KEY != '' }}"
         npm run build
       env:
         REACT_APP_COSMOS_ENDPOINT: ${{ secrets.REACT_APP_COSMOS_ENDPOINT }}
