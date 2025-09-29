@@ -16,14 +16,12 @@ export class CosmosService {
       key: key ? 'Set' : 'Not set'
     });
     
-    // For now, use mock data if environment variables aren't set
-    if (!endpoint || !key) {
-      console.warn('Cosmos DB environment variables not set - using localStorage fallback');
-      this.cosmosClient = null as any;
-      this.database = null as any;
-      this.container = null as any;
-      return;
-    }
+    // Force localStorage fallback to avoid Cosmos DB atob error
+    console.warn('Using localStorage fallback for data persistence');
+    this.cosmosClient = null as any;
+    this.database = null as any;
+    this.container = null as any;
+    return;
     
     this.cosmosClient = new CosmosClient({
       endpoint: endpoint,
