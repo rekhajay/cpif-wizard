@@ -36,10 +36,7 @@ export class CosmosService {
   // Save CPIF document
   async saveCPIF(cpifData: CPIFDocument): Promise<CPIFDocument> {
     if (!this.container) {
-      console.warn('Cosmos DB not initialized - saving to localStorage instead');
-      const savedData = { ...cpifData, id: Date.now().toString() };
-      localStorage.setItem('cpif-draft', JSON.stringify(savedData));
-      return savedData;
+      throw new Error('Cosmos DB not configured. Please check environment variables.');
     }
     
     try {
