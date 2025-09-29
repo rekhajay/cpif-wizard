@@ -223,15 +223,15 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved }: WizardProps
 
   const loadSavedCPIFs = async () => {
     try {
-      // For now, load from localStorage - in production this would query the database
-      const savedData = localStorage.getItem('cpif-draft');
-      if (savedData) {
-        const cpif = JSON.parse(savedData);
-        setSavedCPIFs([cpif]);
+      // Load from Cosmos DB
+      const cpifs = await cosmosService.getAllCPIFs();
+      setSavedCPIFs(cpifs);
+      if (cpifs.length > 0) {
         setShowCRUD(true);
       }
     } catch (error) {
-      console.error('Failed to load saved CPIFs:', error);
+      console.error('Failed to load saved CPIFs from Cosmos DB:', error);
+      alert('Failed to load saved CPIFs. Please check your Cosmos DB connection.');
     }
   };
 

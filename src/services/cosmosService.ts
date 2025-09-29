@@ -16,13 +16,10 @@ export class CosmosService {
       key: key ? 'Set' : 'Not set'
     });
     
-    // Force localStorage fallback to avoid Cosmos DB atob error
-    console.warn('Using localStorage fallback for data persistence');
-    this.cosmosClient = null as any;
-    this.database = null as any;
-    this.container = null as any;
-    return;
-    
+    if (!endpoint || !key) {
+      throw new Error('Cosmos DB environment variables not set. Please configure REACT_APP_COSMOS_ENDPOINT and REACT_APP_COSMOS_KEY');
+    }
+
     this.cosmosClient = new CosmosClient({
       endpoint: endpoint,
       key: key
@@ -35,22 +32,16 @@ export class CosmosService {
   // Save CPIF document
   async saveCPIF(cpifData: CPIFDocument): Promise<CPIFDocument> {
     console.log('saveCPIF called with:', cpifData);
-    console.log('container is null?', !this.container);
-    
-    if (!this.container) {
-      console.warn('Cosmos DB not configured - saving to localStorage instead');
-      const savedData = { ...cpifData, id: Date.now().toString() };
-      console.log('Saving to localStorage:', savedData);
-      localStorage.setItem('cpif-draft', JSON.stringify(savedData));
-      console.log('Successfully saved to localStorage');
-      return savedData;
-    }
     
     try {
       const { resource } = await this.container.items.create(cpifData);
-      return resource;
+      if (!resource) {
+        throw new Error('Failed to create CPIF document in Cosmos DB');
+      }
+      console.log('Successfully saved to Cosmos DB:', resource.id);
+      return resource as unknown as CPIFDocument;
     } catch (error) {
-      console.error('Failed to save CPIF:', error);
+      console.error('Failed to save CPIF to Cosmos DB:', error);
       throw error;
     }
   }
@@ -59,7 +50,7 @@ export class CosmosService {
   async getCPIFById(id: string): Promise<CPIFDocument | null> {
     try {
       const { resource } = await this.container.item(id).read();
-      return resource;
+      return resource as unknown as CPIFDocument;
     } catch (error: any) {
       if (error.code === 404) {
         return null;
@@ -107,7 +98,7 @@ export class CosmosService {
         lastModified: new Date(),
         version: (cpifData.version || 0) + 1
       });
-      return resource;
+      return resource as unknown as CPIFDocument;
     } catch (error) {
       console.error('Failed to update CPIF:', error);
       throw error;
@@ -151,6 +142,21 @@ export class CosmosService {
 
     const { resources } = await this.container.items.query(query).fetchAll();
     return resources;
+  }
+
+  // Get all CPIFs (for admin or when no user filter needed)
+  async getAllCPIFs(): Promise<CPIFDocument[]> {
+    try {
+      const { resources } = await this.container.items
+        .query({
+          query: 'SELECT * FROM c ORDER BY c.timestamp DESC'
+        })
+        .fetchAll();
+      return resources;
+    } catch (error) {
+      console.error('Failed to get all CPIFs:', error);
+      throw error;
+    }
   }
 }
 
