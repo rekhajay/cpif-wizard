@@ -318,8 +318,9 @@ export default function Wizard({ open, onClose }: WizardProps) {
       
     } catch (error) {
       console.error('Failed to save CPIF:', error);
+      console.error('Error details:', error);
       setSaveStatus('error');
-      alert('Failed to save CPIF form. Please try again.');
+      alert(`Failed to save CPIF form. Error: ${error.message || error}`);
     } finally {
       setIsSaving(false);
     }
