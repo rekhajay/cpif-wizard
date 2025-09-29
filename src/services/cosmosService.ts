@@ -15,12 +15,13 @@ export class CosmosService {
       key: key ? 'Set' : 'Not set'
     });
     
+    // For now, let's use mock data if environment variables aren't set
     if (!endpoint || !key) {
-      console.error('Cosmos DB environment variables not set:', {
-        REACT_APP_COSMOS_ENDPOINT: endpoint,
-        REACT_APP_COSMOS_KEY: key ? 'Set' : 'Not set'
-      });
-      throw new Error('Cosmos DB environment variables not configured');
+      console.warn('Cosmos DB environment variables not set - using mock mode');
+      this.cosmosClient = null as any;
+      this.database = null as any;
+      this.container = null as any;
+      return;
     }
     
     this.cosmosClient = new CosmosClient({
@@ -34,6 +35,13 @@ export class CosmosService {
 
   // Save CPIF document
   async saveCPIF(cpifData: CPIFDocument): Promise<CPIFDocument> {
+    if (!this.container) {
+      console.warn('Cosmos DB not initialized - saving to localStorage instead');
+      const savedData = { ...cpifData, id: Date.now().toString() };
+      localStorage.setItem('cpif-draft', JSON.stringify(savedData));
+      return savedData;
+    }
+    
     try {
       const { resource } = await this.container.items.create(cpifData);
       return resource;
