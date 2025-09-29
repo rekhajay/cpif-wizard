@@ -26,21 +26,7 @@ jobs:
       run: npm ci
         
     - name: Build
-      run: |
-        echo "Environment variables during build:"
-        echo "REACT_APP_COSMOS_ENDPOINT: $REACT_APP_COSMOS_ENDPOINT"
-        echo "REACT_APP_COSMOS_KEY: ${REACT_APP_COSMOS_KEY:0:20}..."
-        echo "Checking if secrets exist:"
-        echo "Secret REACT_APP_COSMOS_ENDPOINT exists: ${{ secrets.REACT_APP_COSMOS_ENDPOINT != '' }}"
-        echo "Secret REACT_APP_COSMOS_KEY exists: ${{ secrets.REACT_APP_COSMOS_KEY != '' }}"
-        echo "Running build script to generate config..."
-        node scripts/build-config.js
-        echo "Contents of generated cosmos.ts:"
-        cat src/config/cosmos.ts
-        npm run build
-      env:
-        REACT_APP_COSMOS_ENDPOINT: ${{ secrets.REACT_APP_COSMOS_ENDPOINT }}
-        REACT_APP_COSMOS_KEY: ${{ secrets.REACT_APP_COSMOS_KEY }}
+      run: npm run build
         
     - name: Deploy to Azure Static Web Apps
       uses: Azure/static-web-apps-deploy@v1
