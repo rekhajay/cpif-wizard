@@ -16,9 +16,11 @@ type LeadSourceOption = 'Referral' | 'Website' | 'Social Media' | 'Advertising' 
 interface WizardProps {
   open: boolean;
   onClose: () => void;
+  ocId?: string; // Optional OC ID to track which OC this wizard is for
+  onCPIFSaved?: (ocId: string) => void; // Callback when CPIF is saved
 }
 
-export default function Wizard({ open, onClose }: WizardProps) {
+export default function Wizard({ open, onClose, ocId, onCPIFSaved }: WizardProps) {
   const [selectedTab, setSelectedTab] = useState<WizardTab | ''>('');
   const [currentStep, setCurrentStep] = useState<'tab-selection' | 'single-row'>('tab-selection');
   
@@ -33,6 +35,11 @@ export default function Wizard({ open, onClose }: WizardProps) {
   // Form state
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  
+  // CRUD state
+  const [savedCPIFs, setSavedCPIFs] = useState<CPIFDocument[]>([]);
+  const [showCRUD, setShowCRUD] = useState(false);
+  const [editingCPIF, setEditingCPIF] = useState<CPIFDocument | null>(null);
   
   // Form fields
   const [newAccountLegalName, setNewAccountLegalName] = useState('');
@@ -194,6 +201,13 @@ export default function Wizard({ open, onClose }: WizardProps) {
     }
   }, [open, currentStep]);
 
+  // Load saved CPIFs when wizard opens
+  useEffect(() => {
+    if (open && ocId) {
+      loadSavedCPIFs();
+    }
+  }, [open, ocId]);
+
   const loadEmployees = async () => {
     setLoadingEmployees(true);
     try {
@@ -203,6 +217,20 @@ export default function Wizard({ open, onClose }: WizardProps) {
       console.error('Failed to load employees:', error);
     } finally {
       setLoadingEmployees(false);
+    }
+  };
+
+  const loadSavedCPIFs = async () => {
+    try {
+      // For now, load from localStorage - in production this would query the database
+      const savedData = localStorage.getItem('cpif-draft');
+      if (savedData) {
+        const cpif = JSON.parse(savedData);
+        setSavedCPIFs([cpif]);
+        setShowCRUD(true);
+      }
+    } catch (error) {
+      console.error('Failed to load saved CPIFs:', error);
     }
   };
 
@@ -316,6 +344,15 @@ export default function Wizard({ open, onClose }: WizardProps) {
       setSaveStatus('saved');
       alert(`CPIF form saved successfully!\nID: ${cpifDocument.id}\nStatus: ${cpifDocument.status}`);
       
+      // Notify parent component that CPIF was saved
+      if (ocId && onCPIFSaved) {
+        onCPIFSaved(ocId);
+      }
+
+      // Update local state and show CRUD interface
+      setSavedCPIFs(prev => [...prev, cpifDocument]);
+      setShowCRUD(true);
+      
     } catch (error) {
       console.error('Failed to save CPIF:', error);
       console.error('Error details:', error);
@@ -344,7 +381,14 @@ export default function Wizard({ open, onClose }: WizardProps) {
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
       <div className="relative max-h-[90vh] w-[95vw] overflow-auto rounded-2xl bg-white p-6 shadow-xl">
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold">CPIF Creation Wizard</h2>
+          <h2 className="text-2xl font-bold">
+            CPIF Creation Wizard
+            {selectedTab && (
+              <span className="ml-3 text-lg font-normal text-blue-600">
+                - {selectedTab}
+              </span>
+            )}
+          </h2>
           <button
             className="rounded-xl border px-4 py-2"
             onClick={onClose}
@@ -872,6 +916,83 @@ export default function Wizard({ open, onClose }: WizardProps) {
             <div className="text-center text-gray-600">
               <p>This tab selection will have its own custom wizard layout.</p>
               <p>For now, showing the "New Client-Entity (Need a CUS#)" layout as an example.</p>
+            </div>
+          </div>
+        )}
+
+        {/* CRUD Interface for Managing Saved CPIFs */}
+        {showCRUD && savedCPIFs.length > 0 && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h4 className="text-base font-semibold text-green-600">Manage Container Wizard - CRUD Operations</h4>
+              <div className="flex gap-2">
+                <button
+                  className="rounded-xl bg-green-500 px-4 py-2 text-white hover:bg-green-600"
+                  onClick={() => {
+                    setShowCRUD(false);
+                    setCurrentStep('single-row');
+                  }}
+                >
+                  Create New CPIF
+                </button>
+                <button
+                  className="rounded-xl border px-4 py-2"
+                  onClick={() => setCurrentStep('tab-selection')}
+                >
+                  Back to Tab Selection
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h5 className="text-lg font-medium">Saved CPIF Forms</h5>
+              <div className="space-y-3">
+                {savedCPIFs.map((cpif, index) => (
+                  <div key={cpif.id || index} className="border rounded-lg p-4 bg-gray-50">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h6 className="font-medium text-gray-900">
+                          CPIF #{index + 1} - {cpif.accountInfo?.legalName || 'Unnamed'}
+                        </h6>
+                        <p className="text-sm text-gray-600 mt-1">
+                          ID: {cpif.id} | Status: {cpif.status} | Created: {new Date(cpif.timestamp).toLocaleDateString()}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Industry: {cpif.accountInfo?.industry} | Entity: {cpif.accountInfo?.entityType}
+                        </p>
+                      </div>
+                      <div className="flex gap-2 ml-4">
+                        <button
+                          className="rounded-lg bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-600"
+                          onClick={() => setEditingCPIF(cpif)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="rounded-lg bg-green-500 px-3 py-1.5 text-sm text-white hover:bg-green-600"
+                          onClick={() => {
+                            // View functionality - could open a read-only modal
+                            alert(`Viewing CPIF: ${cpif.accountInfo?.legalName}\nID: ${cpif.id}`);
+                          }}
+                        >
+                          View
+                        </button>
+                        <button
+                          className="rounded-lg bg-red-500 px-3 py-1.5 text-sm text-white hover:bg-red-600"
+                          onClick={() => {
+                            if (confirm('Are you sure you want to delete this CPIF?')) {
+                              setSavedCPIFs(prev => prev.filter(p => p.id !== cpif.id));
+                              alert('CPIF deleted successfully!');
+                            }
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}

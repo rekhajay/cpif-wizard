@@ -860,6 +860,8 @@ export default function App() {
   const [elSuccess, setElSuccess] = useState<null | { ocId: string; data: ELStatus; warnings: string[] }>(null);
   const [showWizard, setShowWizard] = useState(false);
   const [showContainerWizard, setShowContainerWizard] = useState(false);
+  const [currentOCId, setCurrentOCId] = useState<string | null>(null); // Track which OC the wizard is for
+  const [savedCPIFs, setSavedCPIFs] = useState<Record<string, boolean>>({}); // Track which OCs have saved CPIFs
 
   const accountOptions = useMemo(() => {
     const names = new Set<string>();
@@ -1254,12 +1256,14 @@ export default function App() {
                               Renew
                             </button>
                             <button
-                              className="ml-2 rounded-xl bg-blue-500 px-3 py-1.5 text-xs text-white hover:bg-blue-600 disabled:opacity-40"
-                              onClick={() => setShowContainerWizard(true)}
-                              disabled={!canRenew(oc)}
-                              title={!canRenew(oc) ? "Create Container Wizard requires CIS Completed" : "Create Container Wizard"}
+                              className="ml-2 rounded-xl bg-blue-500 px-3 py-1.5 text-xs text-white hover:bg-blue-600"
+                              onClick={() => {
+                                setCurrentOCId(oc.id);
+                                setShowContainerWizard(true);
+                              }}
+                              title={savedCPIFs[oc.id] ? "Manage Container Wizard" : "Create Container Wizard"}
                             >
-                              Create Container Wizard
+                              {savedCPIFs[oc.id] ? "Manage Container Wizard" : "Create Container Wizard"}
                             </button>
                           </div>
                           <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-600">
@@ -1451,7 +1455,15 @@ export default function App() {
       <Wizard open={showWizard} onClose={() => setShowWizard(false)} />
       
       {/* Container Creation Wizard */}
-      <Wizard open={showContainerWizard} onClose={() => setShowContainerWizard(false)} />
+      <Wizard 
+        open={showContainerWizard} 
+        onClose={() => {
+          setShowContainerWizard(false);
+          setCurrentOCId(null);
+        }}
+        ocId={currentOCId || undefined}
+        onCPIFSaved={(ocId) => setSavedCPIFs(prev => ({ ...prev, [ocId]: true }))}
+      />
     </div>
   );
 }
