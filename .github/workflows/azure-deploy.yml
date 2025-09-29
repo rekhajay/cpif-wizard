@@ -33,11 +33,10 @@ jobs:
         echo "Checking if secrets exist:"
         echo "Secret REACT_APP_COSMOS_ENDPOINT exists: ${{ secrets.REACT_APP_COSMOS_ENDPOINT != '' }}"
         echo "Secret REACT_APP_COSMOS_KEY exists: ${{ secrets.REACT_APP_COSMOS_KEY != '' }}"
-        echo "Creating .env file for build..."
-        echo "REACT_APP_COSMOS_ENDPOINT=$REACT_APP_COSMOS_ENDPOINT" > .env
-        echo "REACT_APP_COSMOS_KEY=$REACT_APP_COSMOS_KEY" >> .env
-        echo "Contents of .env:"
-        cat .env
+        echo "Running build script to generate config..."
+        node scripts/build-config.js
+        echo "Contents of generated cosmos.ts:"
+        cat src/config/cosmos.ts
         npm run build
       env:
         REACT_APP_COSMOS_ENDPOINT: ${{ secrets.REACT_APP_COSMOS_ENDPOINT }}
