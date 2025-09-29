@@ -562,12 +562,10 @@ function CPIFGrid({
   oc,
   onCreateCPIF,
   onClose,
-  onOpenWizard,
 }: {
   oc: OpportunityContainer;
   onCreateCPIF: (account: string, serviceCode: string) => void;
   onClose: () => void;
-  onOpenWizard: () => void;
 }) {
   const [draft, setDraft] = useState<MultiEntityRow[]>(deepCopyGrid(oc.grid));
 
@@ -608,7 +606,7 @@ function CPIFGrid({
                   <th className="border px-3 py-2">Selected</th>
                   <th className="border px-3 py-2">Service</th>
                   <th className="border px-3 py-2">Workday Project ID</th>
-                  <th className="border px-3 py-2">Create CPIF Wizard</th>
+                  <th className="border px-3 py-2">Create CPIF</th>
                 </tr>
               </thead>
               <tbody>
@@ -630,14 +628,9 @@ function CPIFGrid({
                         <button
                           className="rounded-xl bg-amber-500 px-3 py-1.5 text-white hover:bg-amber-600 text-sm disabled:opacity-40"
                           disabled={!checked || hasId}
-                          onClick={() => {
-                            console.log('Button clicked! checked:', checked, 'hasId:', hasId, 'disabled:', !checked || hasId);
-                            // Close the CPIF modal and open the wizard
-                            onClose();
-                            onOpenWizard();
-                          }}
+                          onClick={() => onCreateCPIF(r.account, svc.code)}
                         >
-                          Create CPIF Wizard
+                          Create CPIF
                         </button>
                       </td>
                     </tr>
@@ -1384,7 +1377,6 @@ export default function App() {
             oc={cpifEditing}
             onCreateCPIF={(account, svc) => createCPIF(cpifEditing, account, svc)}
             onClose={() => setCpifEditing(null)}
-            onOpenWizard={() => setShowWizard(true)}
           />
         )}
       </Modal>
