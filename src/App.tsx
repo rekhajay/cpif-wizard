@@ -866,6 +866,7 @@ export default function App() {
   const [lastSyncTime, setLastSyncTime] = useState<number>(Date.now());
   const [elSuccess, setElSuccess] = useState<null | { ocId: string; data: ELStatus; warnings: string[] }>(null);
   const [showWizard, setShowWizard] = useState(false);
+  const [showContainerWizard, setShowContainerWizard] = useState(false);
 
   const accountOptions = useMemo(() => {
     const names = new Set<string>();
@@ -1259,6 +1260,14 @@ export default function App() {
                             >
                               Renew
                             </button>
+                            <button
+                              className="ml-2 rounded-xl bg-blue-500 px-3 py-1.5 text-xs text-white hover:bg-blue-600 disabled:opacity-40"
+                              onClick={() => setShowContainerWizard(true)}
+                              disabled={!canRenew(oc)}
+                              title={!canRenew(oc) ? "Create Container Wizard requires CIS Completed" : "Create Container Wizard"}
+                            >
+                              Create Container Wizard
+                            </button>
                           </div>
                           <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-600">
                             <span>Lead: <b>{oc.leadAccount}</b> • Renewal: {monthName(oc.renewalMonth)} {oc.renewalYear}</span>
@@ -1448,6 +1457,9 @@ export default function App() {
 
       {/* CPIF Creation Wizard */}
       <Wizard open={showWizard} onClose={() => setShowWizard(false)} />
+      
+      {/* Container Creation Wizard */}
+      <Wizard open={showContainerWizard} onClose={() => setShowContainerWizard(false)} />
     </div>
   );
 }
