@@ -7,13 +7,17 @@ export class CosmosService {
   private container: Container;
 
   constructor() {
-    const endpoint = process.env.REACT_APP_COSMOS_ENDPOINT || 'https://cosmos-cpif-wizard.documents.azure.com:443/';
-    const key = process.env.REACT_APP_COSMOS_KEY || 'IeF@buuZlg3fpADlKf3IFgGkmlBMAzJfcb5ZbeQv1gr619ED13SDtyYFCzdvFqqNE9FAFOWRCWDgACDb9hTN4g==';
+    const endpoint = process.env.REACT_APP_COSMOS_ENDPOINT;
+    const key = process.env.REACT_APP_COSMOS_KEY;
     
     console.log('Cosmos DB Environment Variables:', {
       endpoint: endpoint ? 'Set' : 'Not set',
       key: key ? 'Set' : 'Not set'
     });
+    
+    if (!endpoint || !key) {
+      throw new Error('Cosmos DB environment variables not configured. Please check your deployment settings.');
+    }
     
     this.cosmosClient = new CosmosClient({
       endpoint: endpoint,
