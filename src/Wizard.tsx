@@ -40,6 +40,7 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved }: WizardProps
   const [savedCPIFs, setSavedCPIFs] = useState<CPIFDocument[]>([]);
   const [showCRUD, setShowCRUD] = useState(false);
   const [editingCPIF, setEditingCPIF] = useState<CPIFDocument | null>(null);
+  const [selectedCPIFId, setSelectedCPIFId] = useState<string | null>(null);
   
   // Form fields
   const [newAccountLegalName, setNewAccountLegalName] = useState('');
@@ -320,6 +321,89 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved }: WizardProps
     setSaveStatus('idle');
   };
 
+  const populateFormFromCPIF = (cpif: CPIFDocument) => {
+    // Populate all form fields from CPIF data
+    setNewAccountLegalName(cpif.accountInfo?.legalName || '');
+    setPrimaryContactName(cpif.accountInfo?.primaryContact || '');
+    setPrimaryContactTitle(cpif.accountInfo?.primaryContactTitle || '');
+    setPrimaryContactEmail(cpif.accountInfo?.primaryContactEmail || '');
+    setIndustry(cpif.accountInfo?.industry as IndustryOption || '');
+    setEntityType(cpif.accountInfo?.entityType as EntityTypeOption || '');
+    setAddress(cpif.accountInfo?.address || '');
+    setCity(cpif.accountInfo?.city || '');
+    setState(cpif.accountInfo?.state || '');
+    setZipCode(cpif.accountInfo?.zipCode || '');
+    setProductService(cpif.accountInfo?.productService as ProductServiceOption || '');
+    setEstOpptyValue(cpif.accountInfo?.estOpptyValue || '');
+    setOpportunityPartner(cpif.accountInfo?.opportunityPartner?.id || '');
+    setTaxDeliveryPartner(cpif.accountInfo?.taxDeliveryPartner?.id || '');
+    setBdSalesSupport(cpif.accountInfo?.bdSalesSupport || '');
+    setLeadSource(cpif.accountInfo?.leadSource as LeadSourceOption || '');
+    setLeadSourceDetails(cpif.accountInfo?.leadSourceDetails || '');
+    setLsFreeText(cpif.accountInfo?.lsFreeText || '');
+    setReferringEmployee(cpif.accountInfo?.referringEmployee?.id || '');
+    
+    // Workday fields
+    setNeedProjectInWorkday(cpif.workdayInfo?.needProjectInWorkday ? 'Yes' : 'No');
+    setCustomerCollectionsLead(cpif.workdayInfo?.customerCollectionsLead?.id || '');
+    setProjectDeliveryLead(cpif.workdayInfo?.projectDeliveryLead?.id || '');
+    setProjectManager(cpif.workdayInfo?.projectManager?.id || '');
+    setAsstProjectManager(cpif.workdayInfo?.asstProjectManager?.id || '');
+    setProjectBillingSpecialist(cpif.workdayInfo?.projectBillingSpecialist?.id || '');
+    setServiceCode(cpif.workdayInfo?.serviceCode || '');
+    setTaxYearEnd(cpif.workdayInfo?.taxYearEnd || '');
+    setRenewableProject(cpif.workdayInfo?.renewableProject ? 'Yes' : 'No');
+    setProjectStartDate(cpif.workdayInfo?.projectStartDate || '');
+    setProjectEndDate(cpif.workdayInfo?.projectEndDate || '');
+    setTaxForm(cpif.workdayInfo?.taxForm || '');
+    setNextDueDate(cpif.workdayInfo?.nextDueDate || '');
+    setDateOfDeath(cpif.workdayInfo?.dateOfDeath || '');
+    setContractType(cpif.workdayInfo?.contractType || '');
+    setTotalEstimatedHours(cpif.workdayInfo?.totalEstimatedHours?.toString() || '');
+    setEstimatedRealizationYear1(cpif.workdayInfo?.estimatedRealizationYear1 || '');
+    setContractRateSheet(cpif.workdayInfo?.contractRateSheet || '');
+    setTotalContractAmount(cpif.workdayInfo?.totalContractAmount?.toString() || '');
+    setAdminFeePercent(cpif.workdayInfo?.adminFeePercent || '');
+    setAdminFeeIncludedExcluded(cpif.workdayInfo?.adminFeeIncludedExcluded || '');
+    setOnboardingFeePercent(cpif.workdayInfo?.onboardingFeePercent || '');
+    setOnboardingFeeAmount(cpif.workdayInfo?.onboardingFeeAmount?.toString() || '');
+    setSuggestedWorkdayParentName(cpif.workdayInfo?.suggestedWorkdayParentName || '');
+    
+    // Tax Admin fields
+    setElSigned(cpif.taxAdmin?.elSigned || false);
+    setAuthorized7216(cpif.taxAdmin?.authorized7216 || false);
+    
+    // PE & TMS fields
+    setConnectedToPEOrTMS(cpif.peTms?.connectedToPEOrTMS || '');
+    setNameOfRelatedPEFundTMSCustomer(cpif.peTms?.nameOfRelatedPEFundTMSCustomer || '');
+    
+    // Invoice fields
+    setInvoiceType(cpif.invoice?.invoiceType || '');
+    setConsolidatedBillingCustomerName(cpif.invoice?.consolidatedBillingCustomerName || '');
+    setConsolidatedBillingExistingSchedule(cpif.invoice?.consolidatedBillingExistingSchedule || '');
+    setAdditionalCustomerContacts(cpif.invoice?.additionalCustomerContacts || '');
+    setAdditionalCustomerContactEmails(cpif.invoice?.additionalCustomerContactEmails || '');
+    setInvoiceRecipientNames(cpif.invoice?.invoiceRecipientNames || '');
+    setInvoiceRecipientEmails(cpif.invoice?.invoiceRecipientEmails || '');
+    
+    // Engagement fields
+    setPartnerSigningEL(cpif.engagement?.partnerSigningEL || '');
+    setConsultingServicesDescription(cpif.engagement?.consultingServicesDescription || '');
+    
+    // Pete Klinger fields
+    setDocumentDelivery(cpif.peteKlinger?.documentDelivery || '');
+    setInvoiceMemo(cpif.peteKlinger?.invoiceMemo || '');
+    setBillToContact(cpif.peteKlinger?.billToContact || '');
+    
+    // Revenue Forecast fields
+    setRevenueForecast(cpif.revenueForecast || {});
+    
+    // Onboarding fields
+    setAccountGUID(cpif.onboarding?.accountGUID || '');
+    setOpportunityGUID(cpif.onboarding?.opportunityGUID || '');
+    setOpportunityName(cpif.onboarding?.opportunityName || '');
+  };
+
   const duplicateCPIF = async (sourceCPIF: CPIFDocument) => {
     try {
       // Create a new CPIF document with copied values but new ID and timestamp
@@ -472,7 +556,13 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved }: WizardProps
       }
 
       // Update local state and show CRUD interface
-      setSavedCPIFs(prev => [...prev, cpifDocument]);
+      if (selectedCPIFId) {
+        // Update existing CPIF
+        setSavedCPIFs(prev => prev.map(p => p.id === selectedCPIFId ? cpifDocument : p));
+      } else {
+        // Add new CPIF
+        setSavedCPIFs(prev => [...prev, cpifDocument]);
+      }
       setShowCRUD(true);
       
     } catch (error) {
@@ -1045,38 +1135,36 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved }: WizardProps
         {/* CRUD Interface for Managing Saved CPIFs */}
         {showCRUD && savedCPIFs.length > 0 && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h4 className="text-base font-semibold text-green-600">Manage Container Wizard - CRUD Operations</h4>
-              <div className="flex gap-2">
-                <button
-                  className="rounded-xl bg-green-500 px-4 py-2 text-white hover:bg-green-600"
-                  onClick={() => {
-                    setShowCRUD(false);
-                    setCurrentStep('single-row');
-                    // Clear all form fields for a fresh start
-                    clearAllFormFields();
-                  }}
-                >
-                  Create New Wizard Row
-                </button>
-                <button
-                  className="rounded-xl border px-4 py-2"
-                  onClick={() => setCurrentStep('tab-selection')}
-                >
-                  Back to Tab Selection
-                </button>
-              </div>
-            </div>
-
+            {/* Saved CPIF Forms Grid - Moved to Top */}
             <div className="space-y-4">
               <h5 className="text-lg font-medium">Saved CPIF Forms</h5>
               <div className="space-y-3">
                 {savedCPIFs.map((cpif, index) => (
-                  <div key={cpif.id || index} className="border rounded-lg p-4 bg-gray-50">
+                  <div 
+                    key={cpif.id || index} 
+                    className={`border rounded-lg p-4 cursor-pointer transition-all duration-200 ${
+                      selectedCPIFId === cpif.id 
+                        ? 'bg-blue-100 border-blue-500 shadow-md' 
+                        : 'bg-gray-50 hover:bg-gray-100'
+                    }`}
+                    onClick={() => {
+                      setSelectedCPIFId(cpif.id);
+                      populateFormFromCPIF(cpif);
+                      setShowCRUD(false);
+                      setCurrentStep('single-row');
+                    }}
+                  >
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
-                        <h6 className="font-medium text-gray-900">
+                        <h6 className={`font-medium ${
+                          selectedCPIFId === cpif.id ? 'text-blue-900' : 'text-gray-900'
+                        }`}>
                           CPIF #{index + 1} - {cpif.accountInfo?.legalName || 'Unnamed'}
+                          {selectedCPIFId === cpif.id && (
+                            <span className="ml-2 text-xs bg-blue-500 text-white px-2 py-1 rounded-full">
+                              SELECTED
+                            </span>
+                          )}
                         </h6>
                         <p className="text-sm text-gray-600 mt-1">
                           ID: {cpif.id} | Status: {cpif.status} | Created: {new Date(cpif.timestamp).toLocaleDateString()}
@@ -1122,6 +1210,31 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved }: WizardProps
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* Action Buttons - Moved Below Grid */}
+            <div className="flex justify-between items-center">
+              <h4 className="text-base font-semibold text-green-600">Manage Container Wizard - CRUD Operations</h4>
+              <div className="flex gap-2">
+                <button
+                  className="rounded-xl bg-green-500 px-4 py-2 text-white hover:bg-green-600"
+                  onClick={() => {
+                    setShowCRUD(false);
+                    setCurrentStep('single-row');
+                    setSelectedCPIFId(null);
+                    // Clear all form fields for a fresh start
+                    clearAllFormFields();
+                  }}
+                >
+                  Create New Wizard Row
+                </button>
+                <button
+                  className="rounded-xl border px-4 py-2"
+                  onClick={() => setCurrentStep('tab-selection')}
+                >
+                  Back to Tab Selection
+                </button>
               </div>
             </div>
           </div>
