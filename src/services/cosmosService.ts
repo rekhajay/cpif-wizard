@@ -1,5 +1,6 @@
 import { CosmosClient, Database, Container } from '@azure/cosmos';
 import { CPIFDocument } from '../types/cpif';
+import { cosmosConfig } from '../config/cosmos';
 
 export class CosmosService {
   private cosmosClient: CosmosClient;
@@ -7,8 +8,8 @@ export class CosmosService {
   private container: Container;
 
   constructor() {
-    const endpoint = process.env.REACT_APP_COSMOS_ENDPOINT;
-    const key = process.env.REACT_APP_COSMOS_KEY;
+    const endpoint = cosmosConfig.endpoint;
+    const key = cosmosConfig.key;
     
     console.log('Cosmos DB Environment Variables:', {
       endpoint: endpoint ? 'Set' : 'Not set',
