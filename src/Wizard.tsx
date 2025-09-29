@@ -234,6 +234,128 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved }: WizardProps
     }
   };
 
+  const clearAllFormFields = () => {
+    // Reset all form fields to empty/default values
+    setNewAccountLegalName('');
+    setPrimaryContactName('');
+    setPrimaryContactTitle('');
+    setPrimaryContactEmail('');
+    setIndustry('');
+    setEntityType('');
+    setAddress('');
+    setCity('');
+    setState('');
+    setZipCode('');
+    setProductService('');
+    setEstOpptyValue('');
+    setOpportunityPartner('');
+    setTaxDeliveryPartner('');
+    setBdSalesSupport('');
+    setLeadSource('');
+    setLeadSourceDetails('');
+    setLsFreeText('');
+    setReferringEmployee('');
+    
+    // Workday fields
+    setNeedProjectInWorkday('');
+    setCustomerCollectionsLead('');
+    setProjectDeliveryLead('');
+    setProjectManager('');
+    setAsstProjectManager('');
+    setProjectBillingSpecialist('');
+    setServiceCode('');
+    setTaxYearEnd('');
+    setRenewableProject('');
+    setProjectStartDate('');
+    setProjectEndDate('');
+    setTaxForm('');
+    setNextDueDate('');
+    setDateOfDeath('');
+    setContractType('');
+    setTotalEstimatedHours('');
+    setEstimatedRealizationYear1('');
+    setContractRateSheet('');
+    setTotalContractAmount('');
+    setAdminFeePercent('');
+    setAdminFeeIncludedExcluded('');
+    setOnboardingFeePercent('');
+    setOnboardingFeeAmount('');
+    setSuggestedWorkdayParentName('');
+    
+    // Tax Admin fields
+    setElSigned(false);
+    setAuthorized7216(false);
+    
+    // PE & TMS fields
+    setConnectedToPEOrTMS('');
+    setNameOfRelatedPEFundTMSCustomer('');
+    
+    // Invoice fields
+    setInvoiceType('');
+    setConsolidatedBillingCustomerName('');
+    setConsolidatedBillingExistingSchedule('');
+    setAdditionalCustomerContacts('');
+    setAdditionalCustomerContactEmails('');
+    setInvoiceRecipientNames('');
+    setInvoiceRecipientEmails('');
+    
+    // Engagement fields
+    setPartnerSigningEL('');
+    setConsultingServicesDescription('');
+    
+    // Pete Klinger fields
+    setDocumentDelivery('');
+    setInvoiceMemo('');
+    setBillToContact('');
+    
+    // Revenue Forecast fields
+    setRevenueForecast({});
+    
+    // Onboarding fields
+    setAccountGUID('');
+    setOpportunityGUID('');
+    setOpportunityName('');
+    
+    // Reset save status
+    setSaveStatus('idle');
+  };
+
+  const duplicateCPIF = async (sourceCPIF: CPIFDocument) => {
+    try {
+      // Create a new CPIF document with copied values but new ID and timestamp
+      const duplicatedCPIF: CPIFDocument = {
+        ...sourceCPIF,
+        id: crypto.randomUUID(),
+        timestamp: new Date(),
+        lastModified: new Date(),
+        version: 1,
+        status: 'Draft' as const,
+        // Update the legal name to indicate it's a copy
+        accountInfo: {
+          ...sourceCPIF.accountInfo,
+          legalName: sourceCPIF.accountInfo?.legalName ? `${sourceCPIF.accountInfo.legalName} (Copy)` : 'Copy'
+        }
+      };
+
+      // Save the duplicated CPIF
+      await cosmosService.saveCPIF(duplicatedCPIF);
+      
+      // Add to the saved CPIFs list
+      setSavedCPIFs(prev => [...prev, duplicatedCPIF]);
+      
+      // Notify parent component
+      if (ocId && onCPIFSaved) {
+        onCPIFSaved(ocId);
+      }
+      
+      alert(`CPIF duplicated successfully!\nNew ID: ${duplicatedCPIF.id}`);
+      
+    } catch (error) {
+      console.error('Failed to duplicate CPIF:', error);
+      alert('Failed to duplicate CPIF. Please try again.');
+    }
+  };
+
   const handleNext = async () => {
     setIsSaving(true);
     setSaveStatus('saving');
@@ -931,9 +1053,11 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved }: WizardProps
                   onClick={() => {
                     setShowCRUD(false);
                     setCurrentStep('single-row');
+                    // Clear all form fields for a fresh start
+                    clearAllFormFields();
                   }}
                 >
-                  Create New CPIF
+                  Create New Wizard Row
                 </button>
                 <button
                   className="rounded-xl border px-4 py-2"
@@ -976,6 +1100,12 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved }: WizardProps
                           }}
                         >
                           View
+                        </button>
+                        <button
+                          className="rounded-lg bg-purple-500 px-3 py-1.5 text-sm text-white hover:bg-purple-600"
+                          onClick={() => duplicateCPIF(cpif)}
+                        >
+                          Duplicate
                         </button>
                         <button
                           className="rounded-lg bg-red-500 px-3 py-1.5 text-sm text-white hover:bg-red-600"
