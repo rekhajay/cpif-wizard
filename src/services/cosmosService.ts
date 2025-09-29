@@ -36,10 +36,15 @@ export class CosmosService {
 
   // Save CPIF document
   async saveCPIF(cpifData: CPIFDocument): Promise<CPIFDocument> {
+    console.log('saveCPIF called with:', cpifData);
+    console.log('container is null?', !this.container);
+    
     if (!this.container) {
       console.warn('Cosmos DB not configured - saving to localStorage instead');
       const savedData = { ...cpifData, id: Date.now().toString() };
+      console.log('Saving to localStorage:', savedData);
       localStorage.setItem('cpif-draft', JSON.stringify(savedData));
+      console.log('Successfully saved to localStorage');
       return savedData;
     }
     
