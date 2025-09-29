@@ -36,17 +36,3 @@ jobs:
         action: "upload"
         app_location: "/"
         output_location: "dist"
-        
-    - name: Deploy to Azure Cosmos DB
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-        
-    - name: Deploy Cosmos DB resources
-      run: |
-        az group create --name rg-cpif-wizard --location eastus
-        az deployment group create \
-          --resource-group rg-cpif-wizard \
-          --template-file azure-resources.bicep \
-          --parameters staticWebAppName=swa-cpif-wizard \
-          --parameters cosmosAccountName=cosmos-cpif-wizard
